@@ -1,0 +1,151 @@
+[gd_scene load_steps=16 format=3 uid="uid://b1803wj4r44wv"]
+
+[ext_resource type="Texture2D" uid="uid://b5idkn6if67w3" path="res://assets/popelevator.png" id="1_fnp7t"]
+[ext_resource type="Texture2D" uid="uid://g7010ihf5x1e" path="res://assets/elevator.png" id="2_khjq7"]
+[ext_resource type="AudioStream" uid="uid://e6gvxtu1nn2a" path="res://sfx/pop.wav" id="3_13ty8"]
+[ext_resource type="AudioStream" uid="uid://nwjciflo88k8" path="res://sfx/Retro Jump 01.wav" id="4_8tk25"]
+
+[sub_resource type="GDScript" id="GDScript_isn4h"]
+script/source = "extends Area2D
+
+@onready var collision_shape_2d = $CollisionShape2D
+@onready var cooldown_timer = $CooldownTimer
+var canpush = true
+@onready var animated_sprite_2d = $AnimatedSprite2D
+@onready var audio_stream_player_2d = $AudioStreamPlayer2D
+@onready var audio_stream_player_2d_2 = $AudioStreamPlayer2D2
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	pass # Replace with function body.
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta):
+	pass
+
+
+func _on_body_entered(body):
+	if canpush and body.is_in_group(\"player\"):
+		body.velocity.y = -800
+		animated_sprite_2d.play(\"explode\")
+		collision_shape_2d.disabled=true
+		cooldown_timer.start()
+		canpush=false
+		audio_stream_player_2d.play()
+		audio_stream_player_2d_2.play()
+	
+	
+
+
+func _on_cooldown_timer_timeout():
+	animated_sprite_2d.play(\"idle\")
+	collision_shape_2d.disabled=false
+	canpush=true
+	
+"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cxnf4"]
+atlas = ExtResource("1_fnp7t")
+region = Rect2(0, 0, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_15j3w"]
+atlas = ExtResource("1_fnp7t")
+region = Rect2(32, 0, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w1b5k"]
+atlas = ExtResource("1_fnp7t")
+region = Rect2(64, 0, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2nhvl"]
+atlas = ExtResource("1_fnp7t")
+region = Rect2(96, 0, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yc5mt"]
+atlas = ExtResource("1_fnp7t")
+region = Rect2(128, 0, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_i13wl"]
+atlas = ExtResource("1_fnp7t")
+region = Rect2(160, 0, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6t4nh"]
+atlas = ExtResource("2_khjq7")
+region = Rect2(0, 0, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fg1yq"]
+atlas = ExtResource("2_khjq7")
+region = Rect2(32, 0, 32, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_awlfl"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cxnf4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_15j3w")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w1b5k")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2nhvl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yc5mt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_i13wl")
+}],
+"loop": false,
+"name": &"explode",
+"speed": 15.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6t4nh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fg1yq")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_4ruwn"]
+radius = 34.0
+height = 128.0
+
+[node name="BubbleElevator" type="Area2D"]
+scale = Vector2(0.265961, 0.265961)
+script = SubResource("GDScript_isn4h")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+scale = Vector2(3.88402, 4.0489)
+sprite_frames = SubResource("SpriteFrames_awlfl")
+animation = &"idle"
+autoplay = "idle"
+frame_progress = 0.415065
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+rotation = -1.5708
+shape = SubResource("CapsuleShape2D_4ruwn")
+
+[node name="CooldownTimer" type="Timer" parent="."]
+wait_time = 3.0
+one_shot = true
+
+[node name="AudioStreamPlayer2D2" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("3_13ty8")
+volume_db = 9.952
+pitch_scale = 0.47
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("4_8tk25")
+bus = &"sfx"
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
+[connection signal="timeout" from="CooldownTimer" to="." method="_on_cooldown_timer_timeout"]

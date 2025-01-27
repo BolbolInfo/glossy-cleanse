@@ -1,0 +1,143 @@
+[gd_scene load_steps=13 format=3 uid="uid://duf4u3e61i7vy"]
+
+[ext_resource type="Texture2D" uid="uid://bqs404ae0sdwe" path="res://icon.svg" id="1_e0btp"]
+[ext_resource type="Texture2D" uid="uid://clx5mrr2app43" path="res://assets/bobble.png" id="2_255jx"]
+[ext_resource type="AudioStream" uid="uid://d3ima2ebq8lj5" path="res://sfx/Retro Blop 22.wav" id="3_t8vr2"]
+
+[sub_resource type="GDScript" id="GDScript_jb056"]
+script/source = "extends CharacterBody2D
+
+@export var speed: float   # Movement speed of the bubble.
+@export var lifetime: float = 0.5  # Duration before the bubble disappears.
+@onready var audio_stream_player_2d = $AudioStreamPlayer2D
+@onready var pop = $pop
+@onready var animated_sprite_2d = $AnimatedSprite2D
+@onready var collision_shape_2d = $CollisionShape2D
+
+var direction = Vector2.ZERO  # Direction the bubble travels.
+
+var rng = RandomNumberGenerator.new()
+var damage = 10
+func _ready():
+	# Start the bubble's lifetime timer. 
+	lifetime= rng.randf_range(0.5 ,1)
+	$BubbleTimer.start(lifetime)
+	speed = rng.randf_range(90,110)
+	audio_stream_player_2d.play()
+	audio_stream_player_2d.pitch_scale = rng.randf_range(0.9,0.1)
+
+func _physics_process(delta):
+	position += direction * speed * delta
+
+func _on_bubble_timer_timeout():
+	kill()
+
+
+
+func _on_detector_body_entered(body):
+	
+	if body.is_in_group(\"enemies\"):
+		body.take_damage(damage) 
+		kill() 
+	elif  body.is_in_group(\"player\") or body.is_in_group(\"Bubble\") :
+		pass
+	else :
+		kill()
+func kill():
+	pop.play()
+	pop.pitch_scale = rng.randf_range(0.9,0.1)
+	animated_sprite_2d.visible = false
+	collision_shape_2d.disabled = true
+	await get_tree().create_timer(0.6).timeout 
+	queue_free()
+"
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_fwdbu"]
+radius = 4.16668
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q6vg7"]
+atlas = ExtResource("2_255jx")
+region = Rect2(0, 0, 8, 8)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ntct3"]
+atlas = ExtResource("2_255jx")
+region = Rect2(8, 0, 8, 8)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_88k66"]
+atlas = ExtResource("2_255jx")
+region = Rect2(16, 0, 8, 8)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_m2bu8"]
+atlas = ExtResource("2_255jx")
+region = Rect2(24, 0, 8, 8)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1243h"]
+atlas = ExtResource("2_255jx")
+region = Rect2(32, 0, 8, 8)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_45l40"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q6vg7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ntct3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_88k66")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_m2bu8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1243h")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_gxil5"]
+radius = 4.59741
+
+[node name="Bubble" type="CharacterBody2D" groups=["Bubble"]]
+scale = Vector2(0.870055, 0.870055)
+script = SubResource("GDScript_jb056")
+lifetime = 1.0
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+visible = false
+scale = Vector2(0.164063, 0.164063)
+texture = ExtResource("1_e0btp")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_fwdbu")
+
+[node name="BubbleTimer" type="Timer" parent="."]
+wait_time = 1.5
+autostart = true
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+sprite_frames = SubResource("SpriteFrames_45l40")
+animation = &"idle"
+autoplay = "idle"
+frame_progress = 0.00747583
+
+[node name="detector" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="detector"]
+shape = SubResource("CircleShape2D_gxil5")
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("3_t8vr2")
+volume_db = -9.904
+bus = &"sfx"
+
+[node name="pop" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("3_t8vr2")
+volume_db = -5.942
+
+[connection signal="timeout" from="BubbleTimer" to="." method="_on_bubble_timer_timeout"]
+[connection signal="body_entered" from="detector" to="." method="_on_detector_body_entered"]

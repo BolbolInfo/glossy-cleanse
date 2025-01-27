@@ -1,0 +1,106 @@
+[gd_scene load_steps=15 format=3 uid="uid://bmwhvedybmdt1"]
+
+[ext_resource type="Script" path="res://normal_enemy.gd" id="1_7ig1y"]
+[ext_resource type="Texture2D" uid="uid://bqs404ae0sdwe" path="res://icon.svg" id="1_cgc7n"]
+[ext_resource type="Script" path="res://pointer.gd" id="3_e8y21"]
+[ext_resource type="Texture2D" uid="uid://dpexk2edlcq3w" path="res://assets/bacteria_enemy_2.png" id="4_le0iw"]
+[ext_resource type="PackedScene" uid="uid://cmte7otnlhv" path="res://enem_prog_bar.tscn" id="5_ly40y"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_lpmme"]
+radius = 62.0725
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_54al5"]
+radius = 353.685
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w82o0"]
+atlas = ExtResource("4_le0iw")
+region = Rect2(0, 0, 16, 13)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5rs0q"]
+atlas = ExtResource("4_le0iw")
+region = Rect2(16, 0, 16, 13)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xlk3o"]
+atlas = ExtResource("4_le0iw")
+region = Rect2(32, 0, 16, 13)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ynj1d"]
+atlas = ExtResource("4_le0iw")
+region = Rect2(48, 0, 16, 13)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ynakp"]
+atlas = ExtResource("4_le0iw")
+region = Rect2(64, 0, 16, 13)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gi1ga"]
+atlas = ExtResource("4_le0iw")
+region = Rect2(80, 0, 16, 13)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_8w4ab"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w82o0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5rs0q")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xlk3o")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ynj1d")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ynakp")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gi1ga")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 10.0
+}]
+
+[node name="normal-enemy" type="CharacterBody2D" groups=["enemies"]]
+scale = Vector2(0.295094, 0.285084)
+script = ExtResource("1_7ig1y")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+visible = false
+modulate = Color(0.843137, 0.282353, 1, 1)
+texture = ExtResource("1_cgc7n")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_lpmme")
+
+[node name="detector" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="detector"]
+shape = SubResource("CircleShape2D_54al5")
+
+[node name="cooldown" type="Timer" parent="."]
+wait_time = 0.4
+one_shot = true
+
+[node name="pointer" type="RayCast2D" parent="."]
+modulate = Color(0.634937, 0.000324112, 0.641473, 1)
+scale = Vector2(1.26369, 2.10199)
+script = ExtResource("3_e8y21")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+scale = Vector2(6.77463, 6.77463)
+sprite_frames = SubResource("SpriteFrames_8w4ab")
+animation = &"idle"
+autoplay = "idle"
+frame_progress = 0.41714
+
+[node name="enem_prog_bar" parent="." instance=ExtResource("5_ly40y")]
+offset_left = -57.6088
+offset_top = -126.279
+offset_right = 57.3912
+offset_bottom = -100.279
+
+[connection signal="body_entered" from="detector" to="." method="_on_detector_body_entered"]
+[connection signal="timeout" from="cooldown" to="." method="_on_cooldown_timeout"]

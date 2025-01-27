@@ -1,0 +1,23 @@
+[gd_scene load_steps=4 format=3 uid="uid://cv3rh06ck6jao"]
+
+[ext_resource type="Script" path="res://hammer_trap.gd" id="1_pua7b"]
+[ext_resource type="Texture2D" uid="uid://bqs404ae0sdwe" path="res://icon.svg" id="1_u3pmk"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gr4pg"]
+size = Vector2(240, 129)
+
+[node name="HammerTrap" type="StaticBody2D"]
+scale = Vector2(0.680001, 0.440001)
+script = ExtResource("1_pua7b")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(-3, 0)
+scale = Vector2(1.875, 1)
+texture = ExtResource("1_u3pmk")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-2, 0.5)
+shape = SubResource("RectangleShape2D_gr4pg")
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 3.0

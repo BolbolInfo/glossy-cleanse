@@ -1,0 +1,340 @@
+[gd_scene load_steps=23 format=3 uid="uid://dx1yo5ejfbwok"]
+
+[ext_resource type="PackedScene" uid="uid://cqyk231j5h4ao" path="res://health_bar.tscn" id="1_ga0ws"]
+[ext_resource type="Texture2D" uid="uid://bh5i688jbnrlb" path="res://assets/glass-wiper-spray-shoot.png" id="2_5rk3e"]
+[ext_resource type="Texture2D" uid="uid://7krtpf7kku6c" path="res://assets/glass-wiper-spray.png" id="2_jx0ov"]
+[ext_resource type="Texture2D" uid="uid://jhwad0dv01oc" path="res://assets/fluid-bar-frame.png" id="3_yidnc"]
+[ext_resource type="Texture2D" uid="uid://f28l42a0jaji" path="res://assets/health_ferame.png" id="5_p011k"]
+[ext_resource type="FontFile" uid="uid://dlmh36habk8w8" path="res://assets/ThaleahFat.ttf" id="6_5fem6"]
+
+[sub_resource type="GDScript" id="GDScript_nubcc"]
+script/source = "extends CharacterBody2D
+
+@export var max_health: int = 100  # Maximum health for the player.
+@onready var fluid_bar = $fluidBar
+
+
+@onready var refill_timer = $refill_Timer
+
+@onready var microattackdelay = $microattackdelay
+@onready var bubble_scene = preload(\"res://AttackBubble.tscn\")  # Path to your bubble scene.
+
+@onready var animated_sprite_2d = $AnimatedSprite2D
+@onready var health_bar = $CanvasLayer/HealthBar
+
+
+const SPEED = 200.0
+const JUMP_VELOCITY = -272.0
+const MAX_JUMPS = 2  # Maximum number of jumps allowed.
+const BUBBLE_COOLDOWN = 0.5  # Time between attacks.
+var gravity = ProjectSettings.get_setting(\"physics/2d/default_gravity\")
+var jump_count = 0  # Tracks the current number of jumps.
+var can_attack = true  # To track if the player can attack.
+var current_health: int = max_health  # Current health starts at max.
+var fluid = 100
+
+@onready var control_label = $Label
+
+
+
+
+
+var rng = RandomNumberGenerator.new()
+
+func _ready():
+	health_bar.max_value=max_health
+	health_bar.value=max_health
+	fluid_bar.value = fluid
+	control_label.visible = true
+
+func _physics_process(delta):
+	# Add gravity.
+	if not is_on_floor():
+		velocity.y += gravity * delta
+
+	# Reset jump count when on the floor.
+	if is_on_floor():
+		jump_count = 0
+
+	# Handle jump and double jump.
+	if Input.is_action_just_pressed(\"ui_accept\") and jump_count < MAX_JUMPS:
+		if not is_on_floor() and jump_count==1:
+			velocity.y = JUMP_VELOCITY
+			jump_count += 1
+		elif  is_on_floor() and jump_count==0:
+			velocity.y = JUMP_VELOCITY
+			jump_count += 1
+			
+
+	# Handle horizontal movement.
+	var direction = Input.get_axis(\"ui_left\", \"ui_right\")
+	if direction:
+		velocity.x = direction * SPEED
+	else:
+		velocity.x = move_toward(velocity.x, 0, SPEED)
+
+	# Flip the sprite based on horizontal movement direction.
+	if velocity.x > 0:
+		animated_sprite_2d.flip_h = true  # Facing right
+	elif velocity.x < 0:
+		animated_sprite_2d.flip_h = false  # Facing left
+
+	# Shoot bubble if input is detected and cooldown is over.
+	if Input.is_action_just_pressed(\"shoot_bubble\") and can_attack and fluid_bar.value>0:
+		shoot_bubble()
+
+	move_and_slide()
+
+func shoot_bubble():
+	can_attack = false
+	animated_sprite_2d.play(\"shoot\")
+	var num_bubbles = 5  # Number of bubbles to spawn in the spray.
+	var spread_angle = 50  # Spread angle for the bubbles (in degrees).
+	var angle_step = spread_angle / (num_bubbles - 1)
+	var start_angle = -spread_angle / 2
+
+	for i in range(num_bubbles):
+		var bubble = bubble_scene.instantiate()
+		if animated_sprite_2d.flip_h == true:
+			bubble.global_position.x = global_position.x + 10
+			bubble.global_position.y = global_position.y - 10
+		else:
+			bubble.global_position.x = global_position.x - 10
+			bubble.global_position.y = global_position.y - 10
+
+		var my_random_number = rng.randf_range(0, 1)
+		var angle = start_angle + (i * angle_step * my_random_number)
+		var direction = Vector2(1, 0).rotated(deg_to_rad(angle))
+
+		if animated_sprite_2d.flip_h==false:
+			bubble.direction = direction.rotated(PI)
+		else:
+			bubble.direction = direction
+
+		get_parent().add_child(bubble)
+		update_fluid_bar(-5)
+		await get_tree().create_timer(0.05).timeout
+		
+
+	animated_sprite_2d.play(\"idle\")
+	await get_tree().create_timer(BUBBLE_COOLDOWN).timeout
+	
+
+	can_attack = true
+	
+
+# Health management
+func take_damage(amount: int):
+	current_health -= amount
+	update_healthbar()
+	if current_health <= 0:
+		current_health = 0
+		die()
+	
+
+func update_healthbar ():
+	health_bar.value=current_health
+
+func die():
+	
+	get_tree().reload_current_scene()
+
+
+func update_fluid_bar(amount):
+	fluid_bar.value += amount
+	if fluid_bar.value <=0:
+		refill_timer.start()
+
+
+func _on_refill_timer_timeout():
+	can_attack = false
+	for i in range(25):
+		update_fluid_bar(5)
+		await get_tree().create_timer(0.03).timeout
+	can_attack = true
+
+
+
+func _on_timer_timeout():
+	control_label.visible = false
+"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_uhq18"]
+atlas = ExtResource("2_jx0ov")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n3b23"]
+atlas = ExtResource("2_jx0ov")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3tmur"]
+atlas = ExtResource("2_jx0ov")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_aldtt"]
+atlas = ExtResource("2_jx0ov")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_h785e"]
+atlas = ExtResource("2_jx0ov")
+region = Rect2(64, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7pqcx"]
+atlas = ExtResource("2_5rk3e")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tnvqx"]
+atlas = ExtResource("2_5rk3e")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_a40eq"]
+atlas = ExtResource("2_5rk3e")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_acvqm"]
+atlas = ExtResource("2_5rk3e")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_glig7"]
+atlas = ExtResource("2_5rk3e")
+region = Rect2(64, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_rmmx1"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_uhq18")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_n3b23")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3tmur")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_aldtt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_h785e")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7pqcx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tnvqx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_a40eq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_acvqm")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_glig7")
+}],
+"loop": true,
+"name": &"shoot",
+"speed": 10.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_07hyf"]
+height = 24.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tg2hg"]
+bg_color = Color(0.939432, 0.813441, 0.982336, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hsctn"]
+bg_color = Color(0, 0.309804, 0.768627, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_4suir"]
+
+[node name="PlayerController" type="CharacterBody2D" groups=["player"]]
+script = SubResource("GDScript_nubcc")
+
+[node name="microattackdelay" type="Timer" parent="." groups=["player"]]
+wait_time = 0.1
+one_shot = true
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+scale = Vector2(1.5, 1.5)
+sprite_frames = SubResource("SpriteFrames_rmmx1")
+animation = &"shoot"
+autoplay = "idle"
+frame_progress = 0.181024
+flip_h = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_07hyf")
+
+[node name="DoubleJumpTimer" type="Timer" parent="."]
+wait_time = 0.5
+
+[node name="fluidBar" type="ProgressBar" parent="."]
+z_index = 1
+offset_left = -47.0
+offset_top = -41.0
+offset_right = 52.0
+offset_bottom = -14.0
+scale = Vector2(0.200579, 0.200579)
+pivot_offset = Vector2(46.8811, 14.0643)
+theme_override_styles/background = SubResource("StyleBoxFlat_tg2hg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_hsctn")
+value = 10.0
+show_percentage = false
+
+[node name="Fluid-bar-frame" type="Sprite2D" parent="fluidBar"]
+texture_filter = 1
+position = Vector2(49.3875, 12.8837)
+scale = Vector2(9.89909, 8.76288)
+texture = ExtResource("3_yidnc")
+
+[node name="refill_Timer" type="Timer" parent="."]
+one_shot = true
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="HealthBar" parent="CanvasLayer" instance=ExtResource("1_ga0ws")]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 51.0
+offset_top = -65.0
+offset_right = 427.0
+offset_bottom = -38.0
+grow_vertical = 0
+size_flags_vertical = 8
+
+[node name="HealthFerame" type="Sprite2D" parent="CanvasLayer/HealthBar"]
+texture_filter = 1
+position = Vector2(202.051, 13.0375)
+scale = Vector2(14.4343, 6.74063)
+texture = ExtResource("5_p011k")
+
+[node name="Label" type="Label" parent="."]
+texture_filter = 1
+offset_left = -167.0
+offset_top = -49.0
+offset_right = 88.0
+offset_bottom = 2.0
+scale = Vector2(0.788886, 1.53776)
+theme_override_colors/font_color = Color(0, 0.686275, 0.733333, 1)
+theme_override_fonts/font = ExtResource("6_5fem6")
+text = "USE ARROWS OR WASD TO MOVE 
+SPACE TO ATTACK
+YOU CAN DOUBLE JUMP ! "
+label_settings = SubResource("LabelSettings_4suir")
+uppercase = true
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 4.0
+one_shot = true
+autostart = true
+
+[connection signal="timeout" from="refill_Timer" to="." method="_on_refill_timer_timeout"]
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

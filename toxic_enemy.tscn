@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://bxj8cd30al23k"]
+
+[ext_resource type="Texture2D" uid="uid://bqs404ae0sdwe" path="res://icon.svg" id="1_874us"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_j1jcj"]
+radius = 63.1981
+
+[node name="ToxicEnemy" type="CharacterBody2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(0.764706, 0.435294, 0.290196, 1)
+texture = ExtResource("1_874us")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_j1jcj")
+
+[node name="Timer" type="Timer" parent="."]

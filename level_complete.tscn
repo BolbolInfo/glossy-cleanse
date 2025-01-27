@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 format=3 uid="uid://cnv1m1ol6vvqp"]
+
+[ext_resource type="FontFile" uid="uid://dlmh36habk8w8" path="res://assets/ThaleahFat.ttf" id="1_00ffo"]
+
+[node name="CanvasLayer" type="CanvasLayer"]
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Control"]
+texture_filter = 1
+layout_mode = 0
+offset_right = 252.0
+offset_bottom = 40.0
+scale = Vector2(10.3416, 10.3416)
+theme_override_fonts/normal_font = ExtResource("1_00ffo")
+theme_override_font_sizes/bold_italics_font_size = 70
+text = "LEVEL COMPLETE"
+fit_content = true
+scroll_active = false
+tab_size = 8

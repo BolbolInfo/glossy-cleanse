@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://cmte7otnlhv"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2hqnq"]
+bg_color = Color(0.848587, 0.584957, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dfpnr"]
+bg_color = Color(0.789208, 0.187766, 0.282668, 1)
+
+[node name="enem_prog_bar" type="ProgressBar"]
+offset_right = 79.0
+offset_bottom = 26.0
+theme_override_styles/background = SubResource("StyleBoxFlat_2hqnq")
+theme_override_styles/fill = SubResource("StyleBoxFlat_dfpnr")
+value = 50.0
+show_percentage = false

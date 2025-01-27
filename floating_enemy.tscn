@@ -1,0 +1,137 @@
+[gd_scene load_steps=10 format=3 uid="uid://dhgt0fu27qumm"]
+
+[ext_resource type="Texture2D" uid="uid://t2mf86rl5k6j" path="res://assets/bact_enemy_1.png" id="1_ceqy4"]
+[ext_resource type="PackedScene" uid="uid://cmte7otnlhv" path="res://enem_prog_bar.tscn" id="2_08nrt"]
+
+[sub_resource type="GDScript" id="GDScript_8dpbw"]
+script/source = "extends CharacterBody2D
+
+@export var float_speed: float = 100.0  # Speed at which the enemy floats
+@export var shoot_cooldown: float = 2.0  # Time between shooting projectiles
+@export var change_direction_interval: float = 1.0  # Time interval to change direction
+@onready var bubble_scene = preload(\"res://EnemyBubble.tscn\")  # Path to your bubble scene
+
+
+@onready var game_manager = $\"../%GameManager\"
+
+@onready var enem_prog_bar = $enem_prog_bar
+
+var time_passed = 0.0  # Tracks time passed for shooting
+var direction_change_timer = 0.0  # Tracks time passed for changing direction
+var rng = RandomNumberGenerator.new()  # Random number generator
+var Health =70
+
+var bounce_force: float = 200.0  # Force applied to help bounce off surfaces more instantly
+
+func _ready():
+	enem_prog_bar.max_value = Health
+	enem_prog_bar.value =Health
+	rng.randomize()
+	pick_random_direction()
+
+func _physics_process(delta):
+	if is_on_wall():
+		velocity.x = -velocity.x  
+		velocity.x += bounce_force * sign(velocity.x)  
+	if is_on_floor():
+		velocity.y = -velocity.y  
+		velocity.y += bounce_force * sign(velocity.y)  
+	if is_on_ceiling():
+		velocity.y = -velocity.y 
+		velocity.y += bounce_force * sign(velocity.y) 
+
+	
+	direction_change_timer += delta
+	if direction_change_timer >= change_direction_interval:
+		pick_random_direction()
+		direction_change_timer = 0
+
+	time_passed += delta
+	if time_passed >= shoot_cooldown:
+		shoot_projectile()
+		time_passed = 0
+	move_and_slide()
+func pick_random_direction():
+
+	velocity = Vector2(rng.randf_range(-1, 1),rng.randf_range(-1, 1)).normalized() * float_speed
+
+func shoot_projectile():
+	var projectile = bubble_scene.instantiate()
+	projectile.global_position = global_position  # Spawn at the enemy's position
+
+	# Shooting omnidirectionally (360 degrees)
+	for i in range(0, 360, 45):  # Shoot in 8 directions (every 45 degrees)
+		var direction = Vector2(1, 0).rotated(deg_to_rad(i))  # Rotate direction vector
+		var shot = projectile.duplicate()  # Create a duplicate of the projectile
+		shot.direction = direction  # Set the direction
+		get_parent().add_child(shot)  # Add the projectile to the scene
+		
+func take_damage(amount):
+	Health -= amount
+	update_hp_bar()
+	if Health <= 0:
+		game_manager.decrease_hover_enemy_count()
+		queue_free()
+func update_hp_bar():
+	enem_prog_bar.value = Health
+"
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_dgcck"]
+radius = 7.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bawr4"]
+atlas = ExtResource("1_ceqy4")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jqfmh"]
+atlas = ExtResource("1_ceqy4")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ncqei"]
+atlas = ExtResource("1_ceqy4")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_b66dl"]
+atlas = ExtResource("1_ceqy4")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_qsbbq"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bawr4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jqfmh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ncqei")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_b66dl")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 10.0
+}]
+
+[node name="FloatingEnemy" type="CharacterBody2D" groups=["enemies"]]
+scale = Vector2(1.79417, 1.79417)
+script = SubResource("GDScript_8dpbw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_dgcck")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+sprite_frames = SubResource("SpriteFrames_qsbbq")
+animation = &"idle"
+autoplay = "idle"
+frame_progress = 0.445175
+
+[node name="enem_prog_bar" parent="." instance=ExtResource("2_08nrt")]
+offset_left = -9.0
+offset_top = -22.0
+offset_right = 70.0
+offset_bottom = -8.0
+scale = Vector2(0.231149, 0.231149)

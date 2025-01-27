@@ -1,0 +1,71 @@
+[gd_scene load_steps=10 format=3 uid="uid://dxldbbimoydot"]
+
+[ext_resource type="Script" path="res://spawner.gd" id="1_hq8lk"]
+[ext_resource type="PackedScene" uid="uid://cmte7otnlhv" path="res://enem_prog_bar.tscn" id="2_67rle"]
+[ext_resource type="Texture2D" uid="uid://b7o5sy7lpngpi" path="res://assets/enemy_spawner.png" id="2_mcech"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6hbmj"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6a0eg"]
+atlas = ExtResource("2_mcech")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_i6tfv"]
+atlas = ExtResource("2_mcech")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_m1obo"]
+atlas = ExtResource("2_mcech")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5hf0y"]
+atlas = ExtResource("2_mcech")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_c2p7y"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6a0eg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_i6tfv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_m1obo")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5hf0y")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 10.0
+}]
+
+[node name="spawner" type="StaticBody2D" groups=["enemies"]]
+scale = Vector2(1.69064, 1.69064)
+script = ExtResource("1_hq8lk")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_6hbmj")
+
+[node name="cooldown" type="Timer" parent="."]
+wait_time = 5.0
+autostart = true
+
+[node name="enem_prog_bar" parent="." instance=ExtResource("2_67rle")]
+offset_left = -21.2937
+offset_top = -34.898
+offset_right = 96.7063
+offset_bottom = -8.89803
+scale = Vector2(0.35489, 0.35489)
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+scale = Vector2(1.26489, 1.26489)
+sprite_frames = SubResource("SpriteFrames_c2p7y")
+animation = &"idle"
+autoplay = "idle"
+frame_progress = 0.272525
+
+[connection signal="timeout" from="cooldown" to="." method="_on_cooldown_timeout"]
